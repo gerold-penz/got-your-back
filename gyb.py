@@ -253,6 +253,12 @@ def getProgPath():
     # Source code
     return os.path.dirname(os.path.realpath(__file__))
 
+def getPersistantDir():
+  if os.environ.get('PERSISTANT_DIR'):
+    return os.path.realpath(os.environ['PERSISTANT_DIR'])
+  else:
+    return getProgPath()
+
 def getValidOauth2TxtCredentials(force_refresh=False):
   """Gets OAuth2 credentials which are guaranteed to be fresh and valid."""
   credentials = getOauth2TxtStorageCredentials()
@@ -277,7 +283,7 @@ def getValidOauth2TxtCredentials(force_refresh=False):
 
 def getOauth2TxtStorageCredentials():
   auth_as = options.use_admin if options.use_admin else options.email
-  cfgFile = os.path.join(getProgPath(), '%s.cfg' % auth_as)
+  cfgFile = os.path.join(getPersistantDir(), '%s.cfg' % auth_as)
   oauth_string = readFile(cfgFile, continueOnError=True, displayError=False)
   if not oauth_string:
     return
@@ -299,7 +305,7 @@ running:
 %s --action create-project --email %s
 
 """ % (sys.argv[0], options.email)
-  filename = os.path.join(getProgPath(), 'client_secrets.json')
+  filename = os.path.join(getPersistantDir(), 'client_secrets.json')
   cs_data = readFile(filename, continueOnError=True, displayError=True)
   if not cs_data:
     systemErrorExit(14, MISSING_CLIENT_SECRETS_MESSAGE)
@@ -387,7 +393,7 @@ def requestOAuthAccess():
 
 def writeCredentials(creds):
   auth_as = options.use_admin if options.use_admin else options.email
-  cfgFile = os.path.join(getProgPath(), '%s.cfg' % auth_as)
+  cfgFile = os.path.join(getPersistantDir(), '%s.cfg' % auth_as)
   creds_data = {
     'token': creds.token,
     'refresh_token': creds.refresh_token,
@@ -515,16 +521,16 @@ def buildGAPIObject(api):
   httpc = google_auth_httplib2.AuthorizedHttp(credentials, _createHttpObj())
   if options.debug:
     extra_args['prettyPrint'] = True
-  if os.path.isfile(os.path.join(getProgPath(), 'extra-args.txt')):
+  if os.path.isfile(os.path.join(getPersistantDir(), 'extra-args.txt')):
     config = configparser.ConfigParser()
     config.optionxform = str
-    config.read(os.path.join(getProgPath(), 'extra-args.txt'))
+    config.read(os.path.join(getPersistantDir(), 'extra-args.txt'))
     extra_args.update(dict(config.items('extra-args')))
   version = getAPIVer(api)
   try:
     return googleapiclient.discovery.build(api, version, http=httpc, cache_discovery=False)
   except googleapiclient.errors.UnknownApiNameOrVersion:
-    disc_file = os.path.join(getProgPath(), '%s-%s.json' % (api, version))
+    disc_file = os.path.join(getPersistantDir(), '%s-%s.json' % (api, version))
     if os.path.isfile(disc_file):
       f = file(disc_file, 'r')
       discovery = f.read()
@@ -543,7 +549,7 @@ def buildGAPIServiceObject(api, soft_errors=False):
   credentials = getSvcAcctCredentials(scopes, auth_as)
   if options.debug:
     extra_args['prettyPrint'] = True
-  if os.path.isfile(os.path.join(getProgPath(), 'extra-args.txt')):
+  if os.path.isfile(os.path.join(getPersistantDir(), 'extra-args.txt')):
     config = configparser.ConfigParser()
     config.optionxform = str
     config.read(getGamPath()+'extra-args.txt')
@@ -721,7 +727,7 @@ def _run_oauth_flow(client_id, client_secret, scopes, access_type, login_hint=No
     kwargs['login_hint'] = login_hint
   # Needs to be set so oauthlib doesn't puke when Google changes our scopes
   os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = 'true'
-  if not os.path.isfile(os.path.join(getProgPath(), 'oauthbrowser.txt')):
+  if not os.path.isfile(os.path.join(getPersistantDir(), 'oauthbrowser.txt')):
     flow.run_console(
             authorization_prompt_message=MESSAGE_CONSOLE_AUTHORIZATION_PROMPT,
             authorization_code_message=MESSAGE_CONSOLE_AUTHORIZATION_CODE,
@@ -861,7 +867,7 @@ def _createClientSecretsOauth2service(projectId):
         "token_uri": "https://accounts.google.com/o/oauth2/token"
     }
 }''' % (client_id, client_secret, projectId)
-  client_secrets_file = os.path.join(getProgPath(), 'client_secrets.json')
+  client_secrets_file = os.path.join(getPersistantDir(), 'client_secrets.json')
   writeFile(client_secrets_file, cs_data, continueOnError=False)
 
 PROJECTID_PATTERN = re.compile(r'^[a-z][a-z0-9-]{4,28}[a-z0-9]$')
@@ -882,7 +888,7 @@ def _getLoginHintProjects():
     sys.exit(3)
   login_hint = getValidateLoginHint(login_hint)
   crm, _ = getCRMService(login_hint)
-  client_secrets_file = os.path.join(getProgPath(), 'client_secrets.json')
+  client_secrets_file = os.path.join(getPersistantDir(), 'client_secrets.json')
   if pfilter == 'current':
     cs_data = readFile(client_secrets_file, mode='rb', continueOnError=True, displayError=True, encoding=None)
     if not cs_data:
@@ -915,8 +921,8 @@ def doDelProjects():
     print('  Project: {0} Deleted ({1}/{2})'.format(projectId, i, count))
 
 def doCreateProject():
-  service_account_file = os.path.join(getProgPath(), 'oauth2service.json')
-  client_secrets_file = os.path.join(getProgPath(), 'client_secrets.json')
+  service_account_file = os.path.join(getPersistantDir(), 'oauth2service.json')
+  client_secrets_file = os.path.join(getPersistantDir(), 'client_secrets.json')
   for a_file in [service_account_file, client_secrets_file]:
     if os.path.exists(a_file):
       print('File %s already exists. Please delete or rename it before attempting to create another project.' % a_file)
@@ -1025,7 +1031,7 @@ API_SCOPE_MAPPING = {
 MESSAGE_INSTRUCTIONS_OAUTH2SERVICE_JSON = 'Please run\n\ngyb --action create-project\ngyb --action check-service-account\n\nto create and configure a service account.'
 def getSvcAcctCredentials(scopes, act_as):
   try:
-    json_string = readFile(os.path.join(getProgPath(), 'oauth2service.json'), continueOnError=True, displayError=True)
+    json_string = readFile(os.path.join(getPersistantDir(), 'oauth2service.json'), continueOnError=True, displayError=True)
     if not json_string:
       print(MESSAGE_INSTRUCTIONS_OAUTH2SERVICE_JSON)
       systemErrorExit(6, None)
@@ -1042,7 +1048,7 @@ def getSvcAcctCredentials(scopes, act_as):
 
 def getSvcAccountClientId():
   try:
-    json_string = readFile(os.path.join(getProgPath(), 'oauth2service.json'), continueOnError=True, displayError=True)
+    json_string = readFile(os.path.join(getPersistantDir(), 'oauth2service.json'), continueOnError=True, displayError=True)
     if not json_string:
       print(MESSAGE_INSTRUCTIONS_OAUTH2SERVICE_JSON)
       systemErrorExit(6, None)
@@ -1238,7 +1244,7 @@ def doesTokenMatchEmail():
   print("Error: you did not authorize the OAuth token in the browser with the \
 %s Google Account. Please make sure you are logged in to the correct account \
 when authorizing the token in the browser." % auth_as)
-  cfgFile = os.path.join(getProgPath(), '%s.cfg' % auth_as)
+  cfgFile = os.path.join(getPersistantDir(), '%s.cfg' % auth_as)
   os.remove(cfgFile)
   return False
 
@@ -1498,6 +1504,7 @@ def main(argv):
   if options.version:
     print(getGYBVersion())
     print('Path: %s' % getProgPath())
+    print('Config-Path: %s' % getPersistantDir())
     print(ssl.OPENSSL_VERSION)
     anonhttpc = _createHttpObj()
     headers = {'User-Agent': getGYBVersion(' | ')}
@@ -2129,7 +2136,7 @@ otaBytesByService,quotaType')
       print('ERROR: --action revoke does not work with --service-account')
       sys.exit(5)
     auth_as = options.use_admin if options.use_admin else options.email
-    oauth2file = os.path.join(getProgPath(), '%s.cfg' % auth_as)
+    oauth2file = os.path.join(getPersistantDir(), '%s.cfg' % auth_as)
     credentials = getOauth2TxtStorageCredentials()
     if credentials is None:
       return

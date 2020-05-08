@@ -1,0 +1,31 @@
+version: "3.6"
+
+volumes:
+  got-your-back-persistant:
+
+
+services:
+
+
+  got-your-back:
+
+    image: geroldpenz/got-your-back
+
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+
+    restart: "no"
+
+    working_dir: /usr/src/app
+
+    environment:
+      PERSISTANT_DIR: "./persistant"
+
+    volumes:
+      - got-your-back-persistant:/usr/src/app/persistant
+
+
+#    command: redis-server /etc/redis/redis.conf --requirepass chKcgha1cxXX
+
+

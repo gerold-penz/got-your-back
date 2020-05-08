@@ -72,3 +72,7 @@ privatekey.p12
 *.tar.xz
 *.wixobj
 *.wixpdb
+
+# IDEs
+.idea
+.vscode
