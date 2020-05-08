@@ -1,8 +1,5 @@
 version: "3.6"
 
-volumes:
-  got-your-back-persistant:
-
 services:
 
   got-your-back:
@@ -19,8 +16,5 @@ services:
       PERSISTANT_DIR: "/app/persistant"
 
     volumes:
-      - got-your-back-persistant:/app/persistant
-
-#    command: redis-server /etc/redis/redis.conf --requirepass chKcgha1cxXX
-
+      - ../_docker_data/got-your-back/persistant:/app/persistant
 
