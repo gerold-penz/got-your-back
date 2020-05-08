@@ -1497,6 +1497,7 @@ def getSizeOfMessages(messages, gmail):
 
 def main(argv):
   global options, gmail
+  os.chdir(getPersistantDir())
   options = SetupOptionParser(argv)
   if options.debug:
     httplib2.debuglevel = 4
