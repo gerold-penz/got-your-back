@@ -3,9 +3,7 @@ version: "3.6"
 volumes:
   got-your-back-persistant:
 
-
 services:
-
 
   got-your-back:
 
@@ -17,14 +15,11 @@ services:
 
     restart: "no"
 
-    working_dir: /usr/src/app
-
     environment:
-      PERSISTANT_DIR: "./persistant"
+      PERSISTANT_DIR: "/app/persistant"
 
     volumes:
-      - got-your-back-persistant:/usr/src/app/persistant
-
+      - got-your-back-persistant:/app/persistant
 
 #    command: redis-server /etc/redis/redis.conf --requirepass chKcgha1cxXX
 
