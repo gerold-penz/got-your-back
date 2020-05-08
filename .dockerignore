@@ -1,2 +1,8 @@
 /travis
 /.github
+/.git
+/.idea
+/_docker_data
+/_scripts
+.gitignore
+.travis.yml

@@ -14,7 +14,7 @@ def main():
 
     try:
         returncode = subprocess.call(
-            ["docker-compose", "run", "--rm", "got-your-back", "/bin/bash"],
+            ["docker-compose", "build"],
             cwd=DOCKERDIR,
             env=os.environ,
             shell=sys.platform.startswith("win")
