@@ -941,7 +941,7 @@ def doCreateProject():
     create_operation = callGAPI(crm.projects(), 'create',
                                 body=body)
     operation_name = create_operation['name']
-    time.sleep(5) # Google recommends always waiting at least 5 seconds
+    time.sleep(20) # Google recommends always waiting at least 5 seconds
     for i in range(1, 5):
       print('Checking project status...')
       status = callGAPI(crm.operations(), 'get',
@@ -1298,6 +1298,11 @@ def createLabel(label_name):
   body = {'labelListVisibility': 'labelShow',
           'messageListVisibility': 'show',
           'name': label_name}
+
+  print()
+  print(repr(body))
+  print()
+
   label_results = None
   try:
     label_results = callGAPI(gmail.users().labels(), 'create',
@@ -1714,14 +1719,27 @@ def main(argv):
         sqlcur.execute('SELECT DISTINCT label FROM labels WHERE message_num \
           = ?', (message_num,))
         labels_results = sqlcur.fetchall()
+
+        print()
+        print(options.label_prefix)
+        print()
+
+
         for l in labels_results:
           if options.label_prefix:
             if l[0].lower()!="unread":
-              labels.append(options.label_prefix[0] + "/" + l[0])
+              # labels.append(options.label_prefix[0] + "/" + l[0])
+              labels.append(options.label_prefix + "/" + l[0])
             else:
               labels.append(l[0])
           else:
             labels.append(l[0])
+
+        print()
+        print(labels)
+        print()
+
+
       if options.label_restored:
         for restore_label in options.label_restored:
           labels.append(restore_label)
